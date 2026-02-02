@@ -1,0 +1,16 @@
+{
+  "name": "hometask_lesson_03",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node hometask_lesson_03.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "fs-extra": "^11.3.3"
+  }
+}
