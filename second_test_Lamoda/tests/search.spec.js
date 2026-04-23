@@ -1,23 +1,25 @@
 import { test, expect } from '@playwright/test';
-import { data_factory } from '../source/factories/data_factory';
-import { main_page_class } from '../source/pages/main_page_class';
+import { DataFactory } from '../source/factories/DataFactory';
+import { MainPage } from '../source/pages/MainPage';
+import { SearchResultsPage } from '../source/pages/SearchResultsPage';
 
-test.describe('Search functionality - Automated Suite', () =>
-{
-    const categories = data_factory.get_all_categories();
+test.describe('Search Functionality', () => {
+	const categories = DataFactory.getAllCategories();
 
-    for (const category of categories)
-    {
-        test(`Search for ${category}`, async ({ page }) =>
-        {
-            const main_page = new main_page_class(page);
-            const data = data_factory.get_search_data(category);
+	for (const category of categories) {
+		test(`should display correct results for category: ${category}`, async ({ page }) => {
+			const mainPage = new MainPage(page);
+			const searchResultsPage = new SearchResultsPage(page);
+			const data = DataFactory.getSearchData(category);
 
-            await main_page.open_home_page();
-            await main_page.header.search_for_product(data.term);
-            
-            const title = await page.locator('h2').textContent();
-            expect(title.toLowerCase()).toContain(data.expected);
-        });
-    }
+			await mainPage.navigate('/');
+			await mainPage.header.searchForProduct(data.term);
+
+			await searchResultsPage.waitForCatalogueToLoad();
+
+			const title = await searchResultsPage.getElementText(searchResultsPage.searchHeader);
+
+			expect(title.toLowerCase()).toContain(data.term.toLowerCase());
+		});
+	}
 });

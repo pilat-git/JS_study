@@ -1,42 +1,42 @@
-const { defineConfig, devices } = require('@playwright/test');
+import { defineConfig, devices } from '@playwright/test';
 
-module.exports = defineConfig(
-{
-    testDir: './tests',
-    fullyParallel: true,
-    retries: 1,
-    reporter: [['html'], ['list']],
+export default defineConfig({
+	testDir: './tests',
+	fullyParallel: true,
+	forbidOnly: !!process.env.CI,
+	retries: process.env.CI ? 1 : 0,
+	workers: 3,
+	reporter: 'html',
+	use: {
+		baseURL: 'https://www.lamoda.by',
+		trace: 'on-first-retry',
+	},
 
-    use: {
-        baseURL: 'https://lamoda.by',
-        trace: 'on-first-retry',
-        // trace: 'on',
-        screenshot: 'on-first-retry',
-        video: 'on-first-retry',
-        // viewport: { width: 1280, height: 720 },
-        headless: false,
-    },
-    
-    projects:
-    [
-        {
-            name: 'setup_cookies',
-            testMatch: 'state/cookie_accept.spec.js',
-            use:
-            { 
-                ...devices['Desktop Chrome'],
-            },
-        },
-
-        {
-            name: 'chromium',
-            use:
-            { 
-                ...devices['Desktop Chrome'],
-                storageState: '.auth/cookies.json',
-            },
-            testIgnore: 'tests/state/**',
-            dependencies: ['setup_cookies'],
-        }
-    ],
+	projects: [
+		{
+			name: 'setupCookies',
+			testMatch: 'state/CookieAccept.spec.js',
+		},
+		{
+			name: 'chromium',
+			use: {
+				...devices['Desktop Chrome'],
+				storageState: '.auth/cookies.json',
+			},
+			testIgnore: ['state/**', 'api/**'],
+			dependencies: ['setupCookies'],
+		},
+		{
+			name: 'api',
+			testMatch: 'api/*.spec.js',
+			use: {
+				extraHTTPHeaders: {
+					Accept: 'application/json',
+					'User-Agent':
+						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+					Referer: 'https://www.lamoda.by/',
+				},
+			},
+		},
+	],
 });

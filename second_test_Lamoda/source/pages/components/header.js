@@ -1,63 +1,50 @@
-export class header
-{
-    constructor(page)
-    {
-        this.page = page;
+export class Header {
+	constructor(page) {
+		this.page = page;
 
-        this.search_input = this.page.getByPlaceholder('Поиск');
+		this.searchInput = this.page.getByPlaceholder('Поиск');
+		this.cartIcon = this.page.locator('a[href*="/cart/"]');
+		this.cityChooser = this.page.locator('.js-header-geo-wrapper');
+		this.selectAnotherButton = this.page.getByRole('button', { name: 'Выбрать другой' });
+		this.citySearchInput = this.page.locator('input[placeholder*="название города"]');
+		this.cityFromList = (cityName) =>
+			this.page.locator(`a[class*="cityLink"][role="button"]`).filter({ hasText: cityName });
+		this.goToShoppingButton = this.page.getByRole('button', { name: 'Перейти к покупкам' });
+		this.genderTab = (genderName) => this.page.locator('nav[role="menubar"] a').filter({ hasText: genderName });
+	}
 
-        this.cart_icon = this.page.locator('a[href*="/cart/"]');
+	async searchForProduct(productName) {
+		const query = productName.toLowerCase();
+		await this.searchInput.fill(query);
+		await this.page.keyboard.press('Enter');
+	}
 
-        this.city_chooser = this.page.locator('.js-header-geo-wrapper');
-        
-        this.select_another_button = this.page.getByRole('button', { name: 'Выбрать другой' });
-        
-        this.city_search_input = this.page.locator('input[placeholder*="название города"]');
-        
-        this.city_from_list = (cityName) => this.page.locator(`a[class*="cityLink"][role="button"]`).filter({ hasText: cityName });
-        
-        this.go_to_shopping_button = this.page.getByRole('button', { name: 'Перейти к покупкам' });
-    }
+	async changeCity(cityName) {
+		await this.cityChooser.hover();
+		await this.page.waitForTimeout(500);
 
-    async search_for_product(product_name)
-    {
-        await this.search_input.fill(product_name);
-        await this.page.keyboard.press('Enter');
-    }
+		if (await this.selectAnotherButton.isVisible()) {
+			await this.selectAnotherButton.click();
+		} else {
+			await this.cityChooser.click();
+		}
 
-    async change_city(cityName)
-    {
-        await this.city_chooser.hover();
-        await this.page.waitForTimeout(500);
+		const targetCity = this.cityFromList(cityName);
+		await targetCity.waitFor({ state: 'visible' });
+		await targetCity.click();
 
-        if (await this.select_another_button.isVisible())
-        {
-            await this.select_another_button.click();
-        } 
-        else
-        {
-            await this.city_chooser.click();
-        }
+		await this.goToShoppingButton.waitFor({ state: 'visible' });
+		await this.goToShoppingButton.click();
+		await this.goToShoppingButton.waitFor({ state: 'hidden' });
+	}
 
-        const targetCity = this.city_from_list(cityName);
-        await targetCity.waitFor({ state: 'visible' });
-        await targetCity.click();
+	async getCurrentCity() {
+		const text = await this.cityChooser.textContent();
+		return text ? text.trim() : '';
+	}
 
-        await this.go_to_shopping_button.waitFor({ state: 'visible' });
-        await this.go_to_shopping_button.click();
-        
-        await this.go_to_shopping_button.waitFor({ state: 'hidden' });
-    }
-
-    async get_current_city()
-    {
-        const text = await this.city_chooser.textContent();
-        return text ? text.trim() : '';
-    }
-
-    async click_cart_icon()
-    {
-        await this.cart_icon.waitFor({ state: 'visible' });
-        await this.cart_icon.click();
-    }
+	async clickCartIcon() {
+		await this.cartIcon.waitFor({ state: 'visible' });
+		await this.cartIcon.click();
+	}
 }
